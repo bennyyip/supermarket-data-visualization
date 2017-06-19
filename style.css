@@ -28,10 +28,12 @@
 }
 
 .state{
+  transition: fill-opacity 0.5s ease;
   fill: none;
   stroke: #a9a9a9;
   stroke-width: 1;
 }
+
 .state:hover{
   fill-opacity:0.5;
 }

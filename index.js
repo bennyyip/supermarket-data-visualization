@@ -5,17 +5,22 @@
   const W = 1000
   const H = 600
 
-  const colorsPositive = d3.scaleQuantize().range([
+  const postiveProfitColors = d3.scaleQuantize().range([
     '#BBDEFB', '#90CAF9', '#64B5F6',
     '#42A5F5', '#2196F3', '#1E88E5'
   ])
 
-  const colorsNegative = d3.scaleQuantize().range([
+  const negativeProfitColors = d3.scaleQuantize().range([
     '#D32F2F', '#E53935', '#F44336',
     '#EF5350', '#E57373', '#EF9A9A'
   ])
 
-  Number.prototype.formatMoney = function(c, d, t){
+  const salesColors = d3.scaleQuantize().range([
+    '#BBDEFB', '#90CAF9', '#64B5F6',
+    '#42A5F5', '#2196F3', '#1E88E5'
+  ])
+
+  Number.prototype.formatMoney = function (c, d, t) {
     var n = this,
       c = isNaN(c = Math.abs(c)) ? 2 : c,
       d = d == undefined ? "." : d,
@@ -28,16 +33,18 @@
 
   var ELEMENTS = {
     slider: document.querySelector('#year-slider'),
-    sliderLabel: document.querySelector('#year-slider-label')
+    sliderLabel: document.querySelector('#year-slider-label'),
+    profitOrSalesRadio: document.getElementsByName('profitorsales')
   }
 
   var tip = d3.tip()
     .attr('class', 'd3-tip')
     .offset([-10, 0])
-    .html(function(state) {
+    .html(function (state) {
       if (!!state.properties.profit) {
-        var color =  state.properties.profit>= 0?'#5fba7d':'red';
-        return "<strong style='color:orange'>State:</strong> <span>" + state.properties.name + "</span>" +  "</br><strong style='color:orange'>Profit:</strong> <span style='color:"+color+"'>" + state.properties.profit.formatMoney() + "</span>"
+        var color = state.properties.profit >= 0 ? '#5fba7d' : 'red';
+        return "<strong style='color:orange'>State:</strong> <span>" + state.properties.name + "</span>" + "</br><strong style='color:orange'>Sales:</strong> <span>" + state.properties.sales.formatMoney() + "</span>" + "</br><strong style='color:orange'>Profit:</strong> <span style='color:" + color + "'>" + state.properties.profit.formatMoney() + "</span>"
+
       } else {
         return 'no data'
       }
@@ -80,14 +87,17 @@
 
       var state = order['State']
       var profit = parseFloat(order['Profit'])
+      var sales = parseFloat(order['Sales'])
 
       if (!result[year]) { result[year] = {} }
       if (!result[year][state]) {
         result[year][state] = {
-          profit: 0
+          profit: 0,
+          sales: 0
         }
       }
       result[year][state].profit += profit
+      result[year][state].sales += sales
     })
     return result
   }
@@ -97,57 +107,76 @@
     var projection = d3.geoPath()
       .projection(d3.geoAlbersUsa().translate([W / 2, H / 2]).scale([1000]))
 
-    //创建SVG元素
-    var svg = d3.select("body")
-      .append("svg")
+    // select usmap
+    var usMap = d3.select("#map")
       .attr("width", W)
       .attr("height", H)
-    svg.call(tip)
-
 
     // 生成州
-    var pathes = svg.selectAll('path').data(usstate.features).enter().append('path').attr('d', projection).attr('class', 'state')
+    var pathes = usMap.selectAll('path').data(usstate.features).enter().append('path').attr('d', projection).attr('class', 'state')
     this.pathes = pathes
     pathes
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide)
 
+    // init d3-tip
+    usMap.call(tip)
   }
   // Data Viewer [[[1
   var DataViewer = function DataViewer(orders, pathes, year) {
     this.selectedState = null
     this.orders = orders
     this.pathes = pathes
+    this.profitOrSales = true // true for profit, false for sales
+
     this.setYear(year)
+
+    ELEMENTS.profitOrSalesRadio.forEach(d => d.onclick = (e => {
+      this.profitOrSales = (e.target.value == 'profit')
+      this.updateColor()
+    }))
+
   }
 
   DataViewer.prototype.setYear = function setYear(year) {
     if (!!this.orders[year]) {
       this.year = year
 
-      // 计算最大/最小利润
+      // 计算最大/最小利润/销售额
       var orders = this.orders[year]
-      this.maxProfit = d3.max(Object.keys(orders), state => orders[state].profit)
-      this.minProfit = d3.min(Object.keys(orders), state => orders[state].profit)
+
+      var maxProfit = d3.max(Object.keys(orders), state => orders[state].profit)
+      var minProfit = d3.min(Object.keys(orders), state => orders[state].profit)
+      postiveProfitColors.domain([0, maxProfit])
+      negativeProfitColors.domain([minProfit, 0])
+
+      var maxSales = d3.max(Object.keys(orders), state => orders[state].sales)
+      var minSales = d3.min(Object.keys(orders), state => orders[state].sales)
+      salesColors.domain([minSales, maxSales])
+
       this.updateColor()
     }
   }
   DataViewer.prototype.updateColor = function updateColor() {
     var profits = this.orders[this.year]
+    this.pathes
+      .transition()
+      .duration(500)
+      .ease(d3.easeLinear).style('fill', state => {
+        var s = profits[state.properties.name]
+        if (!!s) {
+          state.properties.profit = s.profit
+          state.properties.sales = s.sales
+          if (this.profitOrSales) { return profitColors(s.profit) }
+          else { return salesColors(s.sales) }
+        }
+        return '#ccc'
+      })
+  }
 
-    colorsPositive.domain([0, this.maxProfit])
-    colorsNegative.domain([this.minProfit, 0])
-
-    this.pathes.style('fill', function (state) {
-      var s = profits[state.properties.name]
-      if (!!s) {
-        var profit = s.profit
-        state.properties.profit = profit
-        if (profit > 0) { return colorsPositive(profit) }
-        if (profit < 0) { return colorsNegative(profit) }
-      }
-      return '#ccc'
-    })
+  function profitColors(profit) {
+    if (profit > 0) { return postiveProfitColors(profit) }
+    if (profit < 0) { return negativeProfitColors(profit) }
   }
   // main [[[1
   Promise.all([
@@ -162,13 +191,13 @@
     var dataViewer = new DataViewer(orders, usMap.pathes, 2010)
 
     // update map when slider is changed
-    ELEMENTS.slider.onchange=((e)=>{
+    ELEMENTS.slider.onchange = ((e) => {
       var year = e.target.value
-      ELEMENTS.sliderLabel.innerText= year
+      ELEMENTS.sliderLabel.innerText = year
       dataViewer.setYear(year)
     })
-
   })
+
 }(d3))
 // vim modeline [[[1
 // vim:fdm=marker:fmr=[[[,]]]

@@ -6,12 +6,16 @@
     <title>2015160105-叶彬-实验2</title>
   </head>
   <body>
+    <svg id="map"></svg>
+
     <div id="year-slider-wrapper">
-    <input id="year-slider" type="range" value="2010" min="2010" max="2013">
-    <label id="year-slider-label">2010</label>
+      <input type="radio" name="profitorsales" value="profit"> <label for="profit">Profit</label>
+      <input type="radio" name="profitorsales" value="sales"> <label for="sales">Sales</label>
+      <input id="year-slider" type="range" value="2010" min="2010" max="2013"> <label id="year-slider-label">2010</label>
     </div>
   </body>
   <script type="text/javascript" src="lib/d3.min.js"></script>
   <script type="text/javascript" src="lib/d3-tip.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
   <script type="text/javascript" src="index.js"></script>
 </html>
