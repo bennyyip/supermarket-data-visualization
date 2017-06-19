@@ -14,6 +14,35 @@
     '#D32F2F', '#E53935', '#F44336',
     '#EF5350', '#E57373', '#EF9A9A'
   ])
+
+  Number.prototype.formatMoney = function(c, d, t){
+    var n = this,
+      c = isNaN(c = Math.abs(c)) ? 2 : c,
+      d = d == undefined ? "." : d,
+      t = t == undefined ? "," : t,
+      s = n < 0 ? "-" : "",
+      i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
+      j = (j = i.length) > 3 ? j % 3 : 0;
+    return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+  };
+
+  var ELEMENTS = {
+    slider: document.querySelector('#year-slider'),
+    sliderLabel: document.querySelector('#year-slider-label')
+  }
+
+  var tip = d3.tip()
+    .attr('class', 'd3-tip')
+    .offset([-10, 0])
+    .html(function(state) {
+      if (!!state.properties.profit) {
+        var color =  state.properties.profit>= 0?'#5fba7d':'red';
+        return "<strong style='color:orange'>State:</strong> <span>" + state.properties.name + "</span>" +  "</br><strong style='color:orange'>Profit:</strong> <span style='color:"+color+"'>" + state.properties.profit.formatMoney() + "</span>"
+      } else {
+        return 'no data'
+      }
+    })
+
   // utils [[[1
   // load data [[[2
   function loadJSON(url) {
@@ -73,10 +102,16 @@
       .append("svg")
       .attr("width", W)
       .attr("height", H)
+    svg.call(tip)
+
 
     // 生成州
     var pathes = svg.selectAll('path').data(usstate.features).enter().append('path').attr('d', projection).attr('class', 'state')
     this.pathes = pathes
+    pathes
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide)
+
   }
   // Data Viewer [[[1
   var DataViewer = function DataViewer(orders, pathes, year) {
@@ -84,7 +119,6 @@
     this.orders = orders
     this.pathes = pathes
     this.setYear(year)
-    this.updateColor()
   }
 
   DataViewer.prototype.setYear = function setYear(year) {
@@ -95,6 +129,7 @@
       var orders = this.orders[year]
       this.maxProfit = d3.max(Object.keys(orders), state => orders[state].profit)
       this.minProfit = d3.min(Object.keys(orders), state => orders[state].profit)
+      this.updateColor()
     }
   }
   DataViewer.prototype.updateColor = function updateColor() {
@@ -104,9 +139,10 @@
     colorsNegative.domain([this.minProfit, 0])
 
     this.pathes.style('fill', function (state) {
-      state = profits[state.properties.name]
-      if (!!state) {
-        var profit = state.profit
+      var s = profits[state.properties.name]
+      if (!!s) {
+        var profit = s.profit
+        state.properties.profit = profit
         if (profit > 0) { return colorsPositive(profit) }
         if (profit < 0) { return colorsNegative(profit) }
       }
@@ -124,6 +160,14 @@
     var orders = processData(rawOrders)
     var usMap = new USMap(usstate)
     var dataViewer = new DataViewer(orders, usMap.pathes, 2010)
+
+    // update map when slider is changed
+    ELEMENTS.slider.onchange=((e)=>{
+      var year = e.target.value
+      ELEMENTS.sliderLabel.innerText= year
+      dataViewer.setYear(year)
+    })
+
   })
 }(d3))
 // vim modeline [[[1
