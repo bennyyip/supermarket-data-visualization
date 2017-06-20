@@ -12,7 +12,6 @@
   box-sizing: border-box;
   display: inline;
   font-size: 10px;
-  width: 100%;
   line-height: 1;
   color: rgba(0, 0, 0, 0.8);
   content: "\25BC";
@@ -36,4 +35,40 @@
 
 .state:hover{
   fill-opacity:0.5;
+}
+
+
+/* bar chart */
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis--x path {
+  display: none;
+}
+
+/* legend */
+#legend {
+    padding: 1.5em 0 0 1.5em;
+}
+
+li.key {
+    border-top-width: 15px;
+    border-top-style: solid;
+    font-size: .75em;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.list-inline {
+  list-style: none;
+  display: inline-block;
+}
+
+.list-inline > li {
+  display: inline-block;
 }

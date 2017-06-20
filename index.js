@@ -1,19 +1,19 @@
-(function (d3) {
+(function (d3, dimple) {
   'use strict'
   // const [[[1
   //SVG的宽度和高度
   const W = 1000
   const H = 600
 
-  const postiveProfitColors = d3.scaleQuantize().range([
+  const profitColors = d3.scaleQuantize().range([
+    '#D32F2F', '#E53935', '#F44336',
+    '#EF5350', '#E57373', '#EF9A9A',
+
     '#BBDEFB', '#90CAF9', '#64B5F6',
     '#42A5F5', '#2196F3', '#1E88E5'
   ])
 
-  const negativeProfitColors = d3.scaleQuantize().range([
-    '#D32F2F', '#E53935', '#F44336',
-    '#EF5350', '#E57373', '#EF9A9A'
-  ])
+  profitColors.domain([-1, 1])
 
   const salesColors = d3.scaleQuantize().range([
     '#BBDEFB', '#90CAF9', '#64B5F6',
@@ -34,7 +34,10 @@
   var ELEMENTS = {
     slider: document.querySelector('#year-slider'),
     sliderLabel: document.querySelector('#year-slider-label'),
-    profitOrSalesRadio: document.getElementsByName('profitorsales')
+    map: document.querySelector('#map'),
+    barChart: document.querySelector('#bar-chart'),
+    legend: document.querySelector('#legend'),
+    profitOrSalesRadio: document.getElementsByName('profitorsales'),
   }
 
   var tip = d3.tip()
@@ -78,26 +81,64 @@
     })
   }
   // process data [[[2
+
   function processData(orders) {
     var result = {}
+    result[2009] = {}  // all time
     orders.forEach(order => {
       var ref = order['OrderDate'].split('/').map(Number)
-      var month = ref[1]
+      // var month = ref[1]
       var year = ref[0]
 
       var state = order['State']
+      var cate = order['ProductSubCategory']
       var profit = parseFloat(order['Profit'])
       var sales = parseFloat(order['Sales'])
 
       if (!result[year]) { result[year] = {} }
+
       if (!result[year][state]) {
         result[year][state] = {
           profit: 0,
-          sales: 0
+          sales: 0,
+          name: state
         }
       }
+      if (!result[2009][state]) {
+        result[2009][state] = {
+          profit: 0,
+          sales: 0,
+          name: state
+        }
+      }
+
+
+      if (!result[year][state][cate]) {
+        result[year][state][cate] = {
+          profit: 0,
+          sales: 0,
+          name: cate
+        }
+      }
+
+      if (!result[2009][state][cate]) {
+        result[2009][state][cate] = {
+          profit: 0,
+          sales: 0,
+          name: cate
+        }
+      }
+
+
+      result[year][state][cate].profit += profit
+      result[year][state][cate].sales += sales
       result[year][state].profit += profit
       result[year][state].sales += sales
+
+      result[2009][state][cate].profit += profit
+      result[2009][state][cate].sales += sales
+      result[2009][state].profit += profit
+      result[2009][state].sales += sales
     })
     return result
   }
@@ -113,15 +154,30 @@
       .attr("height", H)
 
     // 生成州
-    var pathes = usMap.selectAll('path').data(usstate.features).enter().append('path').attr('d', projection).attr('class', 'state')
+    var pathes = usMap
+      .selectAll('path')
+      .data(usstate.features)
+      .enter()
+      .append('path')
+      .attr('d', projection)
+      .attr('class', 'state')
+
+    // 绑定 DOM 元素和数据, 便于后续使用
+    pathes.each(function (data) {
+      this.data = data
+    })
+
     this.pathes = pathes
+
     pathes
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide)
 
     // init d3-tip
     usMap.call(tip)
+
   }
+
   // Data Viewer [[[1
   var DataViewer = function DataViewer(orders, pathes, year) {
     this.selectedState = null
@@ -131,53 +187,133 @@
 
     this.setYear(year)
 
+    // select year
     ELEMENTS.profitOrSalesRadio.forEach(d => d.onclick = (e => {
       this.profitOrSales = (e.target.value == 'profit')
       this.updateColor()
     }))
 
+    // select state
+    ELEMENTS.map.addEventListener('click', this.selectState.bind(this))
+    this.selectedState = null
   }
+
+  DataViewer.prototype.selectState = function selectState(e) {
+    var target = e.target
+    if (target.classList.contains('state')) {
+      this.setState(target.data.properties.name)
+    } else {
+      this.setState(null)
+    }
+  }
+
+  DataViewer.prototype.setState = function setState(state) {
+    if (this.selectedState !== state) {
+      this.selectedState = state
+      this.updateCharts()
+    }
+  }
+
 
   DataViewer.prototype.setYear = function setYear(year) {
     if (!!this.orders[year]) {
       this.year = year
 
       // 计算最大/最小利润/销售额
-      var orders = this.orders[year]
+      var orders = Object.values(this.orders[year])
 
-      var maxProfit = d3.max(Object.keys(orders), state => orders[state].profit)
-      var minProfit = d3.min(Object.keys(orders), state => orders[state].profit)
-      postiveProfitColors.domain([0, maxProfit])
-      negativeProfitColors.domain([minProfit, 0])
+      this.maxProfit = d3.max(orders, state => state.profit)
+      this.minProfit = d3.min(orders, state => state.profit)
 
-      var maxSales = d3.max(Object.keys(orders), state => orders[state].sales)
-      var minSales = d3.min(Object.keys(orders), state => orders[state].sales)
-      salesColors.domain([minSales, maxSales])
+      var maxSales = d3.max(orders, state => state.sales)
+      var minSales = d3.min(orders, state => state.sales)
+      salesColors.domain([minSales, maxSales]).nice()
+
+      var x = d3.scaleBand().rangeRound([0, W]).padding(0.1)
+      var y = d3.scaleLinear().rangeRound([H, 0])
+
+      x.domain(orders.map(state => state.name));
+      y.domain([this.minProfit, this.maxProfit]);
 
       this.updateColor()
+      this.updateCharts()
     }
   }
+
   DataViewer.prototype.updateColor = function updateColor() {
-    var profits = this.orders[this.year]
+    var ordersThisYear = this.orders[this.year]
+
+    this.updateLegend()
+
     this.pathes
       .transition()
       .duration(500)
       .ease(d3.easeLinear).style('fill', state => {
-        var s = profits[state.properties.name]
+        var s = ordersThisYear[state.properties.name]
         if (!!s) {
           state.properties.profit = s.profit
           state.properties.sales = s.sales
-          if (this.profitOrSales) { return profitColors(s.profit) }
+          if (this.profitOrSales) { return profitColors(s.profit > 0 ? s.profit / this.maxProfit : -s.profit / this.minProfit) }
           else { return salesColors(s.sales) }
         }
         return '#ccc'
       })
   }
 
-  function profitColors(profit) {
-    if (profit > 0) { return postiveProfitColors(profit) }
-    if (profit < 0) { return negativeProfitColors(profit) }
+
+  DataViewer.prototype.updateLegend = function updateLegend() {
+    ELEMENTS.legend.innerHTML = ''
+    var legend = d3.select('#legend')
+      .append('ul')
+      .attr('class', 'list-inline')
+      .style('width', W * 0.8 + 'px')
+
+    if (this.profitOrSales) {
+
+      var keys = legend.selectAll('li.key')
+        .data(profitColors.range())
+
+      keys.enter().append('li')
+        .attr('class', 'key')
+        .style('border-top-color', String)
+        .style('width', 100.0 / 12 + '%')
+        .text(d => {
+          var r = profitColors.invertExtent(d)
+          console.log(r[0])
+          console.log(this.maxProfit)
+          var p = r[0] * this.maxProfit
+          console.log(p)
+          return (p / 1000).toFixed(0) + 'K'
+        })
+
+    } else {
+      var keys = legend.selectAll('li.key')
+        .data(salesColors.range())
+
+      keys.enter().append('li')
+        .attr('class', 'key')
+        .style('border-top-color', String)
+        .style('width', 100.0 / 6 + '%')
+        .text(function (d) {
+          var r = salesColors.invertExtent(d)
+          return (r[0] / 1000).toFixed(0) + 'K'
+        })
+    }
   }
+
+  DataViewer.prototype.updateCharts = function updateCharts() {
+    if (!!this.selectedState) {
+      ELEMENTS.barChart.innerHTML = ''
+      var orders = Object.values(this.orders[this.year][this.selectedState])
+      var svg = d3.select('#bar-chart').attr('width', W).attr('height', H)
+      var barChart = new dimple.chart(svg, orders);
+      var x = barChart.addCategoryAxis("x", "name");
+      barChart.addMeasureAxis("y", "profit");
+      barChart.addSeries(null, dimple.plot.bar);
+      barChart.draw();
+    }
+  }
+
   // main [[[1
   Promise.all([
     loadJSON('data/us-states.json'),
@@ -188,16 +324,18 @@
 
     var orders = processData(rawOrders)
     var usMap = new USMap(usstate)
-    var dataViewer = new DataViewer(orders, usMap.pathes, 2010)
+    var dataViewer = new DataViewer(orders, usMap.pathes, 2009)
+
+    usMap.stateChange = (state => console.log(state))
 
     // update map when slider is changed
     ELEMENTS.slider.onchange = ((e) => {
       var year = e.target.value
-      ELEMENTS.sliderLabel.innerText = year
+      ELEMENTS.sliderLabel.innerText = year == 2009 ? 'All' : year
       dataViewer.setYear(year)
     })
   })
 
-}(d3))
+}(d3, dimple))
 // vim modeline [[[1
 // vim:fdm=marker:fmr=[[[,]]]
