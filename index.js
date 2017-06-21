@@ -23,13 +23,13 @@
   Number.prototype.formatMoney = function (c, d, t) {
     var n = this,
       c = isNaN(c = Math.abs(c)) ? 2 : c,
-      d = d == undefined ? "." : d,
-      t = t == undefined ? "," : t,
-      s = n < 0 ? "-" : "",
+      d = d == undefined ? '.' : d,
+      t = t == undefined ? ',' : t,
+      s = n < 0 ? '-' : '',
       i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
       j = (j = i.length) > 3 ? j % 3 : 0;
-    return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
-  };
+    return s + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : '');
+  }
 
   var ELEMENTS = {
     slider: document.querySelector('#year-slider'),
@@ -256,7 +256,7 @@
           if (this.profitOrSales) { return profitColors(s.profit > 0 ? s.profit / this.maxProfit : -s.profit / this.minProfit) }
           else { return salesColors(s.sales) }
         }
-        return '#ccc'
+        return '#eee'
       })
   }
 
@@ -279,10 +279,7 @@
         .style('width', 100.0 / 12 + '%')
         .text(d => {
           var r = profitColors.invertExtent(d)
-          console.log(r[0])
-          console.log(this.maxProfit)
           var p = r[0] * this.maxProfit
-          console.log(p)
           return (p / 1000).toFixed(0) + 'K'
         })
 
@@ -325,8 +322,6 @@
     var orders = processData(rawOrders)
     var usMap = new USMap(usstate)
     var dataViewer = new DataViewer(orders, usMap.pathes, 2009)
-
-    usMap.stateChange = (state => console.log(state))
 
     // update map when slider is changed
     ELEMENTS.slider.onchange = ((e) => {
