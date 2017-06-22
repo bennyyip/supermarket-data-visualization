@@ -31,6 +31,16 @@
     return s + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : '');
   }
 
+  function floorMoney(x) {
+    if (x>1000) {
+      return (x/1000).toFixed(0) + 'K'
+    } else if (x>100) {
+      return (x/100).toFixed(0) +'00'
+    } else {
+      return x.toFixed(0)
+    }
+  }
+
   var ELEMENTS = {
     slider: document.querySelector('#year-slider'),
     sliderLabel: document.querySelector('#year-slider-label'),
@@ -279,8 +289,8 @@
         .style('width', 100.0 / 12 + '%')
         .text(d => {
           var r = profitColors.invertExtent(d)
-          var p = r[0] * this.maxProfit
-          return (p / 1000).toFixed(0) + 'K'
+          var p = r[0] * (r[0] < 0 ? this.minProfit : this.maxProfit)
+          return floorMoney(p)
         })
 
     } else {
@@ -293,7 +303,7 @@
         .style('width', 100.0 / 6 + '%')
         .text(function (d) {
           var r = salesColors.invertExtent(d)
-          return (r[0] / 1000).toFixed(0) + 'K'
+          return floorMoney(r[0])
         })
     }
   }
