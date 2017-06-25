@@ -89,7 +89,6 @@
       if (!result[year]) { result[year] = {} }
 
       if (!result[year][state]) {
-        console.log(year)
         result[year][state] = {
           profit: 0,
           sales: 0,
@@ -230,11 +229,7 @@
 
 
   DataViewer.prototype.setYear = function setYear(year) {
-    console.log('set yaer' + year)
-    console.log(this.orders)
-    console.log(this.orders[year])
     if (!!this.orders[year]) {
-      console.log('enter set yaer' + year)
       this.year = year
 
       // 计算最大/最小利润/销售额
@@ -357,7 +352,6 @@
     var rawOrders = ref[1]
 
     var orders = processData(rawOrders)
-    console.log(orders)
     var usMap = new USMap(usstate)
     var dataViewer = new DataViewer(orders, usMap.pathes, 2009)
 
