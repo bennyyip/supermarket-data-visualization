@@ -2,8 +2,8 @@
   'use strict'
   // const [[[1
   //SVG的宽度和高度
-  const W = 1000
-  const H = 600
+  const W = window.innerWidth/2.5
+  const H = window.innerHeight/2.5
 
   const profitColors = d3.scaleQuantize().range([
     '#D32F2F', '#E53935', '#F44336',
@@ -16,8 +16,12 @@
   profitColors.domain([-1, 1])
 
   const salesColors = d3.scaleQuantize().range([
-    '#BBDEFB', '#90CAF9', '#64B5F6',
-    '#42A5F5', '#2196F3', '#1E88E5'
+    "#d9f0a3",
+    "#addd8e",
+    "#78c679" ,
+    "#41ab5d" ,
+    "#238443" ,
+    "#005a32"
   ])
 
   Number.prototype.formatMoney = function (c, d, t) {
@@ -46,6 +50,7 @@
     sliderLabel: document.querySelector('#year-slider-label'),
     map: document.querySelector('#map'),
     barChart: document.querySelector('#bar-chart'),
+    ringChart: document.querySelector('#ring-chart'),
     legend: document.querySelector('#legend'),
     profitOrSalesRadio: document.getElementsByName('profitorsales'),
   }
@@ -156,7 +161,7 @@
   var USMap = function USMap(usstate) {
 
     var projection = d3.geoPath()
-      .projection(d3.geoAlbersUsa().translate([W / 2, H / 2]).scale([1000]))
+      .projection(d3.geoAlbersUsa().translate([W / 2, H / 2]).scale(W))
 
     // select usmap
     var usMap = d3.select("#map")
@@ -310,15 +315,34 @@
 
   DataViewer.prototype.updateCharts = function updateCharts() {
     if (!!this.selectedState) {
-      ELEMENTS.barChart.innerHTML = ''
-      var orders = Object.values(this.orders[this.year][this.selectedState])
-      var svg = d3.select('#bar-chart').attr('width', W).attr('height', H)
-      var barChart = new dimple.chart(svg, orders);
-      var x = barChart.addCategoryAxis("x", "name");
-      barChart.addMeasureAxis("y", "profit");
-      barChart.addSeries(null, dimple.plot.bar);
-      barChart.draw();
+      this.updateBarChart()
+      this.updateRingChart()
     }
+  }
+
+  DataViewer.prototype.updateRingChart = function updateRingChart() {
+    ELEMENTS.ringChart.innerHTML = ''
+    var orders = Object.values(this.orders[this.year][this.selectedState])
+    var svg = d3.select('#ring-chart').attr('width', W).attr('height', H)
+    var ringChart = new dimple.chart(svg, orders);
+    ringChart.addMeasureAxis("p", "sales");
+    ringChart.addLegend(W-100, 20, 90, 300, "left");
+    var ring = ringChart.addSeries("name", dimple.plot.pie);
+    ring.innerRadius = "50%";
+    ringChart.draw();
+    var xOffset = W / -5
+    d3.select("#ring-chart>.dimple-chart").attr("transform","translate(" + xOffset +",0)")
+  }
+
+  DataViewer.prototype.updateBarChart = function updateBarChart() {
+    ELEMENTS.barChart.innerHTML = ''
+    var orders = Object.values(this.orders[this.year][this.selectedState])
+    var svg = d3.select('#bar-chart').attr('width', W).attr('height', H)
+    var barChart = new dimple.chart(svg, orders);
+    var x = barChart.addCategoryAxis("x", "name");
+    barChart.addMeasureAxis("y", "profit");
+    barChart.addSeries(null, dimple.plot.bar);
+    barChart.draw();
   }
 
   // main [[[1

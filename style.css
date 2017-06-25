@@ -73,3 +73,22 @@ li.key {
 .list-inline > li {
   display: inline-block;
 }
+
+/* layout */
+
+#app {
+  display: flex;
+  /* flex-direction: column; */
+  width: 100vw;
+  margin-top: 100px;
+}
+
+#options {
+  text-align: center;
+  margin-top: 20px;
+}
+
+*{
+  padding: 0;
+  margin:0;
+}

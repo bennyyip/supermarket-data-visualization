@@ -1,27 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="style.css">
-  <title>2015160105-叶彬-期末大作业</title>
-</head>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>2015160105-叶彬-期末大作业</title>
+  </head>
 
-<body>
-  <svg id="map"></svg>
-  <div id="legend"></div>
+  <body>
+    <div id="app">
+      <div id="left">
+        <svg id="map"></svg>
+        <div id="legend"></div>
 
-  <div id="year-slider-wrapper">
-    <input type="radio" name="profitorsales" value="profit"> <label for="profit">Profit</label>
-    <input type="radio" name="profitorsales" value="sales"> <label for="sales">Sales</label>
-    <input id="year-slider" type="range" value="2009" min="2009" max="2013"> <label id="year-slider-label">All</label>
-  </div>
-  <svg id="bar-chart"></svg>
-</body>
-<script type="text/javascript" src="lib/d3.min.js"></script>
-<script type="text/javascript" src="lib/d3-tip.min.js"></script>
-<script type="text/javascript" src="lib/dimple.v2.3.0.min.js"></script>
-<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-<script type="text/javascript" src="index.js"></script>
+        <div id="options">
+          <input type="radio" name="profitorsales" value="profit" checked> <label for="profit">Profit</label>
+          <input type="radio" name="profitorsales" value="sales"> <label for="sales">Sales</label>
+          <div id="year-slider-wrapper">
+            <input id="year-slider" type="range" value="2009" min="2009" max="2013"> <label id="year-slider-label">All</label>
+          </div>
+        </div>
+      </div>
+      <div id="right">
+        <svg id="bar-chart"></svg>
+        <svg id="ring-chart"></svg>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript" src="lib/d3.min.js"></script>
+  <script type="text/javascript" src="lib/d3-tip.min.js"></script>
+  <script type="text/javascript" src="lib/dimple.v2.3.0.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script type="text/javascript" src="index.js"></script>
 
 </html>
