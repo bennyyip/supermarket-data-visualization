@@ -1,6 +1,6 @@
 (function (d3, dimple) {
   'use strict'
-  // const [[[1
+  // const[[[1
   //SVG的宽度和高度
   const W = window.innerWidth/2.5
   const H = window.innerHeight/2.5
@@ -24,27 +24,6 @@
     "#005a32"
   ])
 
-  Number.prototype.formatMoney = function (c, d, t) {
-    var n = this,
-      c = isNaN(c = Math.abs(c)) ? 2 : c,
-      d = d == undefined ? '.' : d,
-      t = t == undefined ? ',' : t,
-      s = n < 0 ? '-' : '',
-      i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
-      j = (j = i.length) > 3 ? j % 3 : 0;
-    return s + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : '');
-  }
-
-  function floorMoney(x) {
-    if (x>1000) {
-      return (x/1000).toFixed(0) + 'K'
-    } else if (x>100) {
-      return (x/100).toFixed(0) +'00'
-    } else {
-      return x.toFixed(0)
-    }
-  }
-
   var ELEMENTS = {
     slider: document.querySelector('#year-slider'),
     sliderLabel: document.querySelector('#year-slider-label'),
@@ -67,22 +46,8 @@
         return 'no data'
       }
     })
-
   // utils [[[1
   // load data [[[2
-  function loadJSON(url) {
-    return new Promise((resolve, reject) => {
-      d3.json(url, (err, data) => {
-        if (err) {
-          console.log(err)
-          reject(err)
-        } else {
-          resolve(data)
-        }
-      })
-    })
-  }
-
   function loadCSV(url) {
     return new Promise((resolve, reject) => {
       d3.csv(url, (err, data) => {
@@ -95,15 +60,26 @@
       })
     })
   }
-  // process data [[[2
 
+  function loadJSON(url) {
+    return new Promise((resolve, reject) => {
+      d3.json(url, (err, data) => {
+        if (err) {
+          console.log(err)
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  }
+  // process data [[[2
   function processData(orders) {
     var result = {}
     result[2009] = {}  // all time
     orders.forEach(order => {
       var ref = order['OrderDate'].split('/').map(Number)
-      // var month = ref[1]
-      var year = ref[0]
+      var year = ref[2]
 
       var state = order['State']
       var cate = order['ProductSubCategory']
@@ -113,12 +89,14 @@
       if (!result[year]) { result[year] = {} }
 
       if (!result[year][state]) {
+        console.log(year)
         result[year][state] = {
           profit: 0,
           sales: 0,
           name: state
         }
       }
+
       if (!result[2009][state]) {
         result[2009][state] = {
           profit: 0,
@@ -126,7 +104,6 @@
           name: state
         }
       }
-
 
       if (!result[year][state][cate]) {
         result[year][state][cate] = {
@@ -157,6 +134,27 @@
     })
     return result
   }
+  // misc [[[2
+  Number.prototype.formatMoney = function (c, d, t) {
+    var n = this,
+      c = isNaN(c = Math.abs(c)) ? 2 : c,
+      d = d == undefined ? '.' : d,
+      t = t == undefined ? ',' : t,
+      s = n < 0 ? '-' : '',
+      i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
+      j = (j = i.length) > 3 ? j % 3 : 0;
+    return s + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : '');
+  }
+
+  function floorMoney(x) {
+    if (x>1000) {
+      return (x/1000).toFixed(0) + 'K'
+    } else if (x>100) {
+      return (x/100).toFixed(0) +'00'
+    } else {
+      return x.toFixed(0)
+    }
+  }
   // US Map [[[1
   var USMap = function USMap(usstate) {
 
@@ -184,6 +182,7 @@
 
     this.pathes = pathes
 
+    // tooltip
     pathes
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide)
@@ -231,7 +230,11 @@
 
 
   DataViewer.prototype.setYear = function setYear(year) {
+    console.log('set yaer'+ year)
+    console.log(this.orders)
+    console.log(this.orders[year])
     if (!!this.orders[year]) {
+    console.log('enter set yaer'+ year)
       this.year = year
 
       // 计算最大/最小利润/销售额
@@ -354,6 +357,7 @@
     var rawOrders = ref[1]
 
     var orders = processData(rawOrders)
+    console.log(orders)
     var usMap = new USMap(usstate)
     var dataViewer = new DataViewer(orders, usMap.pathes, 2009)
 
