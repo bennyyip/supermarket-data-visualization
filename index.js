@@ -2,8 +2,8 @@
   'use strict'
   // const[[[1
   //SVG的宽度和高度
-  const W = window.innerWidth/2.5
-  const H = window.innerHeight/2.5
+  const W = window.innerWidth / 2.5
+  const H = window.innerHeight / 2.5
 
   const profitColors = d3.scaleQuantize().range([
     '#D32F2F', '#E53935', '#F44336',
@@ -18,9 +18,9 @@
   const salesColors = d3.scaleQuantize().range([
     "#d9f0a3",
     "#addd8e",
-    "#78c679" ,
-    "#41ab5d" ,
-    "#238443" ,
+    "#78c679",
+    "#41ab5d",
+    "#238443",
     "#005a32"
   ])
 
@@ -147,10 +147,10 @@
   }
 
   function floorMoney(x) {
-    if (x>1000) {
-      return (x/1000).toFixed(0) + 'K'
-    } else if (x>100) {
-      return (x/100).toFixed(0) +'00'
+    if (x > 1000) {
+      return (x / 1000).toFixed(0) + 'K'
+    } else if (x > 100) {
+      return (x / 100).toFixed(0) + '00'
     } else {
       return x.toFixed(0)
     }
@@ -230,11 +230,11 @@
 
 
   DataViewer.prototype.setYear = function setYear(year) {
-    console.log('set yaer'+ year)
+    console.log('set yaer' + year)
     console.log(this.orders)
     console.log(this.orders[year])
     if (!!this.orders[year]) {
-    console.log('enter set yaer'+ year)
+      console.log('enter set yaer' + year)
       this.year = year
 
       // 计算最大/最小利润/销售额
@@ -329,12 +329,12 @@
     var svg = d3.select('#ring-chart').attr('width', W).attr('height', H)
     var ringChart = new dimple.chart(svg, orders);
     ringChart.addMeasureAxis("p", "sales");
-    ringChart.addLegend(W-100, 20, 90, 300, "left");
+    ringChart.addLegend(W - 100, 20, 90, 300, "left");
     var ring = ringChart.addSeries("name", dimple.plot.pie);
     ring.innerRadius = "50%";
     ringChart.draw();
     var xOffset = W / -5
-    d3.select("#ring-chart>.dimple-chart").attr("transform","translate(" + xOffset +",0)")
+    d3.select("#ring-chart>.dimple-chart").attr("transform", "translate(" + xOffset + ",0)")
   }
 
   DataViewer.prototype.updateBarChart = function updateBarChart() {
