@@ -108,7 +108,7 @@
         result[year][state][cate] = {
           profit: 0,
           sales: 0,
-          name: cate
+          Category: cate
         }
       }
 
@@ -116,7 +116,7 @@
         result[2009][state][cate] = {
           profit: 0,
           sales: 0,
-          name: cate
+          Category: cate
         }
       }
 
@@ -321,11 +321,14 @@
   DataViewer.prototype.updateRingChart = function updateRingChart() {
     ELEMENTS.ringChart.innerHTML = ''
     var orders = Object.values(this.orders[this.year][this.selectedState])
+
+    console.log(orders)
+
     var svg = d3.select('#ring-chart').attr('width', W).attr('height', H)
     var ringChart = new dimple.chart(svg, orders);
     ringChart.addMeasureAxis("p", "sales");
     ringChart.addLegend(W - 100, 20, 90, 300, "left");
-    var ring = ringChart.addSeries("name", dimple.plot.pie);
+    var ring = ringChart.addSeries("Category", dimple.plot.pie);
     ring.innerRadius = "50%";
     ringChart.draw();
     var xOffset = W / -5
@@ -337,7 +340,7 @@
     var orders = Object.values(this.orders[this.year][this.selectedState])
     var svg = d3.select('#bar-chart').attr('width', W).attr('height', H)
     var barChart = new dimple.chart(svg, orders);
-    var x = barChart.addCategoryAxis("x", "name");
+    var x = barChart.addCategoryAxis("x", "Category");
     barChart.addMeasureAxis("y", "profit");
     barChart.addSeries(null, dimple.plot.bar);
     barChart.draw();
