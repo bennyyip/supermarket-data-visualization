@@ -343,7 +343,8 @@
     var x = barChart.addCategoryAxis("x", "Category");
     barChart.addMeasureAxis("y", "profit");
     barChart.addSeries(null, dimple.plot.bar);
-    barChart.draw();
+    barChart.ease = "bounce"
+    barChart.draw(1000);
   }
 
   // main [[[1
